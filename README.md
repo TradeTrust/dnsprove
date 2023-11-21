@@ -20,7 +20,7 @@ Validation is run on all retrieved records to ensure they conform to the expecte
 ## Installation
 
 ```bash
-npm i @tradetrust/dnsprove
+npm i @tradetrust-tt/dnsprove
 ```
 
 ---
