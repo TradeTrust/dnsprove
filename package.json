@@ -1,5 +1,5 @@
 {
-  "name": "@tradetrust/dnsprove",
+  "name": "@tradetrust-tt/dnsprove",
   "version": "0.0.0-development",
   "description": "Helper utility for retrieving OpenAttestations document store address records from DNS",
   "license": "Apache-2.0",
