@@ -24,6 +24,7 @@ export enum EthereumNetworks {
   local = "1337",
   xdc = "50",
   xdcapothem = "51",
+  stabilityTestnet = "20180427",
 }
 
 export enum HederaNetworks {
@@ -42,6 +43,7 @@ export const EthereumNetworkIdT = Union(
   Literal(EthereumNetworks.polygonMumbai),
   Literal(EthereumNetworks.xdc),
   Literal(EthereumNetworks.xdcapothem),
+  Literal(EthereumNetworks.stabilityTestnet),
   Literal(EthereumNetworks.local)
 );
 
