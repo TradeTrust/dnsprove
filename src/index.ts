@@ -85,6 +85,10 @@ export const queryDns = async (domain: string, customDnsResolvers: CustomDnsReso
 
   let i = 0;
 
+  if (domain.includes("://")) {
+    domain = domain.replace(/(^\w+:|^)\/\//, "");
+  }
+
   while (!data && i < customDnsResolvers.length) {
     try {
       const customDnsResolver = customDnsResolvers[i];

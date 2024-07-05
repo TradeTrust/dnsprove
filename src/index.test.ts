@@ -172,15 +172,41 @@ describe("queryDns", () => {
   let server: SetupServerApi;
 
   const sampleResponse = {
-    AD: false,
+    Status: 0,
+    TC: false,
+    RD: true,
+    RA: true,
+    AD: true,
+    CD: false,
+    Question: [{ name: "donotuse.openattestation.com.", type: 16 }],
     Answer: [
       {
-        name: "google.com",
+        name: "donotuse.openattestation.com.",
         type: 16,
-        TTL: 3529,
-        data: '"docusign=1b0a6754-49b1-4db5-8540-d2c12664b289"',
+        TTL: 300,
+        data: "openatts a=dns-did; p=did:ethr:0xE712878f6E8d5d4F9e87E10DA604F9cB564C9a89#controller; v=1.0;",
+      },
+      {
+        name: "donotuse.openattestation.com.",
+        type: 16,
+        TTL: 300,
+        data:
+          "openatts DO NOT ADD ANY RECORDS BEYOND THIS AS THIS DOMAIN IS USED FOR DNSPROVE NPM LIBRARY INTEGRATION TESTS",
+      },
+      {
+        name: "donotuse.openattestation.com.",
+        type: 16,
+        TTL: 300,
+        data: "openatts fooooooobarrrrrrrrr this entry exists to ensure validation works",
+      },
+      {
+        name: "donotuse.openattestation.com.",
+        type: 16,
+        TTL: 300,
+        data: "openatts net=ethereum netId=3 addr=0x2f60375e8144e16Adf1979936301D8341D58C36C",
       },
     ],
+    Comment: "Response from 205.251.199.177.",
   };
 
   const testDnsResolvers: CustomDnsResolver[] = [
@@ -216,8 +242,9 @@ describe("queryDns", () => {
     server = setupServer(...handlers);
     server.listen();
 
-    const records = await queryDns("https://google.com", testDnsResolvers);
-    expect(sampleResponse).toStrictEqual(records);
+    const records = await queryDns("https://donotuse.openattestation.com", testDnsResolvers);
+    const sortedAnswer = records?.Answer.sort((a, b) => a.data.localeCompare(b.data));
+    expect(sortedAnswer).toStrictEqual(sampleResponse.Answer);
   });
 
   test("Should fallback to second dns when first dns is down", async () => {
@@ -232,9 +259,10 @@ describe("queryDns", () => {
     server = setupServer(...handlers);
     server.listen();
 
-    const records = await queryDns("https://google.com", testDnsResolvers);
+    const records = await queryDns("https://donotuse.openattestation.com", testDnsResolvers);
 
-    expect(sampleResponse).toStrictEqual(records);
+    const sortedAnswer = records?.Answer.sort((a, b) => a.data.localeCompare(b.data));
+    expect(sortedAnswer).toStrictEqual(sampleResponse.Answer);
   });
 
   test("Should throw error when all dns provided are down", async () => {
@@ -249,7 +277,7 @@ describe("queryDns", () => {
     server = setupServer(...handlers);
     server.listen();
     try {
-      await queryDns("https://google.com", testDnsResolvers);
+      await queryDns("https://donotuse.openattestation.com", testDnsResolvers);
     } catch (e: any) {
       expect(e.code).toStrictEqual(DnsproveStatusCode.IDNS_QUERY_ERROR_GENERAL);
     }
