@@ -9,7 +9,4 @@ if (process.env.DEBUG) {
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
-  moduleNameMapper: {
-    axios: "axios/dist/node/axios.cjs", // Temporary workaround: Force Jest to import the CommonJS Axios build
-  },
 };
