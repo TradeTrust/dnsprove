@@ -127,9 +127,11 @@ export const parseOpenAttestationRecord = (record: string): GenericObject => {
 /**
  * Currying function that applies a given dnssec result
  */
-const applyDnssecResults = <T>(dnssecStatus: boolean) => (record: T): T => {
-  return { ...record, dnssec: dnssecStatus };
-};
+const applyDnssecResults =
+  <T>(dnssecStatus: boolean) =>
+  (record: T): T => {
+    return { ...record, dnssec: dnssecStatus };
+  };
 
 /**
  * Some DNS servers return TXT records with quoted strings, others don't :D

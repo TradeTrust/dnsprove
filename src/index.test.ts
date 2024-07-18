@@ -1,6 +1,6 @@
 import axios from "axios";
 import { setupServer, SetupServerApi } from "msw/node";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { CustomDnsResolver, getDocumentStoreRecords, queryDns, parseDocumentStoreResults, getDnsDidRecords } from ".";
 import { DnsproveStatusCode } from "./common/error";
 
@@ -190,8 +190,7 @@ describe("queryDns", () => {
         name: "donotuse.openattestation.com.",
         type: 16,
         TTL: 300,
-        data:
-          "openatts DO NOT ADD ANY RECORDS BEYOND THIS AS THIS DOMAIN IS USED FOR DNSPROVE NPM LIBRARY INTEGRATION TESTS",
+        data: "openatts DO NOT ADD ANY RECORDS BEYOND THIS AS THIS DOMAIN IS USED FOR DNSPROVE NPM LIBRARY INTEGRATION TESTS",
       },
       {
         name: "donotuse.openattestation.com.",
@@ -234,8 +233,8 @@ describe("queryDns", () => {
 
   test("Should work for first dns if first dns is not down", async () => {
     const handlers = [
-      rest.get("https://dns.google/resolve", (_, res, ctx) => {
-        return res(ctx.json(sampleResponse));
+      http.get("https://dns.google/resolve", (_) => {
+        return HttpResponse.json(sampleResponse);
       }),
     ];
 
@@ -249,11 +248,11 @@ describe("queryDns", () => {
 
   test("Should fallback to second dns when first dns is down", async () => {
     const handlers = [
-      rest.get("https://dns.google/resolve", (_, res, ctx) => {
-        return res(ctx.status(500));
+      http.get("https://dns.google/resolve", (_) => {
+        return new HttpResponse(null, { status: 500 });
       }),
-      rest.get("https://cloudflare-dns.com/dns-query", (_, res, ctx) => {
-        return res(ctx.json(sampleResponse));
+      http.get("https://cloudflare-dns.com/dns-query", (_) => {
+        return HttpResponse.json(sampleResponse);
       }),
     ];
     server = setupServer(...handlers);
@@ -267,11 +266,11 @@ describe("queryDns", () => {
 
   test("Should throw error when all dns provided are down", async () => {
     const handlers = [
-      rest.get("https://dns.google/resolve", (_, res, ctx) => {
-        return res(ctx.status(500));
+      http.get("https://dns.google/resolve", (_) => {
+        return new HttpResponse(null, { status: 500 });
       }),
-      rest.get("https://cloudflare-dns.com/dns-query", (_, res, ctx) => {
-        return res(ctx.status(500));
+      http.get("https://cloudflare-dns.com/dns-query", (_) => {
+        return new HttpResponse(null, { status: 500 });
       }),
     ];
     server = setupServer(...handlers);
