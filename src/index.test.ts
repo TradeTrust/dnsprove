@@ -190,7 +190,8 @@ describe("queryDns", () => {
         name: "donotuse.openattestation.com.",
         type: 16,
         TTL: 300,
-        data: "openatts DO NOT ADD ANY RECORDS BEYOND THIS AS THIS DOMAIN IS USED FOR DNSPROVE NPM LIBRARY INTEGRATION TESTS",
+        data:
+          "openatts DO NOT ADD ANY RECORDS BEYOND THIS AS THIS DOMAIN IS USED FOR DNSPROVE NPM LIBRARY INTEGRATION TESTS",
       },
       {
         name: "donotuse.openattestation.com.",
