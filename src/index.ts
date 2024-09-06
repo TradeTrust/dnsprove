@@ -1,4 +1,3 @@
-import axios from "axios";
 import { OpenAttestationDNSTextRecord, OpenAttestationDNSTextRecordT } from "./records/dnsTxt";
 import { OpenAttestationDnsDidRecord, OpenAttestationDnsDidRecordT } from "./records/dnsDid";
 import { getLogger } from "./util/logger";
@@ -26,20 +25,18 @@ export type CustomDnsResolver = (domain: string) => Promise<IDNSQueryResponse>;
 
 export const defaultDnsResolvers: CustomDnsResolver[] = [
   async (domain) => {
-    const { data } = await axios({
+    const data = await fetch(`https://dns.google/resolve?name=${domain}&type=TXT`, {
       method: "GET",
-      url: `https://dns.google/resolve?name=${domain}&type=TXT`,
     });
 
-    return data;
+    return data.json();
   },
   async (domain) => {
-    const { data } = await axios({
+    const data = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=TXT`, {
       method: "GET",
-      url: `https://cloudflare-dns.com/dns-query?name=${domain}&type=TXT`,
       headers: { accept: "application/dns-json", contentType: "application/json", connection: "keep-alive" },
     });
-    return data;
+    return data.json();
   },
 ];
 

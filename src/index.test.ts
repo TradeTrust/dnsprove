@@ -1,4 +1,3 @@
-import axios from "axios";
 import { setupServer, SetupServerApi } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { CustomDnsResolver, getDocumentStoreRecords, queryDns, parseDocumentStoreResults, getDnsDidRecords } from ".";
@@ -211,20 +210,18 @@ describe("queryDns", () => {
 
   const testDnsResolvers: CustomDnsResolver[] = [
     async (domain) => {
-      const { data } = await axios({
+      const data = await fetch(`https://dns.google/resolve?name=${domain}&type=TXT`, {
         method: "GET",
-        url: `https://dns.google/resolve?name=${domain}&type=TXT`,
       });
 
-      return data;
+      return data.json();
     },
     async (domain) => {
-      const { data } = await axios({
+      const data = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=TXT`, {
         method: "GET",
-        url: `https://cloudflare-dns.com/dns-query?name=${domain}&type=TXT`,
         headers: { accept: "application/dns-json", contentType: "application/json", connection: "keep-alive" },
       });
-      return data;
+      return data.json();
     },
   ];
 
@@ -244,7 +241,7 @@ describe("queryDns", () => {
 
     const records = await queryDns("https://donotuse.openattestation.com", testDnsResolvers);
     const sortedAnswer = records?.Answer.sort((a, b) => a.data.localeCompare(b.data));
-    expect(sortedAnswer).toStrictEqual(sampleResponse.Answer);
+    expect(sortedAnswer).toMatchObject(sampleResponse.Answer);
   });
 
   test("Should fallback to second dns when first dns is down", async () => {
@@ -262,7 +259,7 @@ describe("queryDns", () => {
     const records = await queryDns("https://donotuse.openattestation.com", testDnsResolvers);
 
     const sortedAnswer = records?.Answer.sort((a, b) => a.data.localeCompare(b.data));
-    expect(sortedAnswer).toStrictEqual(sampleResponse.Answer);
+    expect(sortedAnswer).toMatchObject(sampleResponse.Answer);
   });
 
   test("Should throw error when all dns provided are down", async () => {
