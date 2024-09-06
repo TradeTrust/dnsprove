@@ -214,14 +214,14 @@ describe("queryDns", () => {
         method: "GET",
       });
 
-      return await data.json();
+      return data.json();
     },
     async (domain) => {
       const data = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=TXT`, {
         method: "GET",
         headers: { accept: "application/dns-json", contentType: "application/json", connection: "keep-alive" },
       });
-      return await data.json();
+      return data.json();
     },
   ];
 
