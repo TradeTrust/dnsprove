@@ -28,6 +28,7 @@ export enum EthereumNetworks {
   stability = "101010",
   hedera = "295",
   hederatestnet = "296",
+  astron = "1338",
 }
 
 export enum HederaNetworks {
@@ -50,7 +51,8 @@ export const EthereumNetworkIdT = Union(
   Literal(EthereumNetworks.stability),
   Literal(EthereumNetworks.local),
   Literal(EthereumNetworks.hedera),
-  Literal(EthereumNetworks.hederatestnet)
+  Literal(EthereumNetworks.hederatestnet),
+  Literal(EthereumNetworks.astron)
 );
 
 export const OpenAttestationDNSTextRecordT = Union(
