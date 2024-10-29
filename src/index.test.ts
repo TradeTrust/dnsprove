@@ -333,7 +333,7 @@ describe("getDocumentStoreRecords for Astron", () => {
     const sampleDnsTextRecord = [
       {
         type: "openatts",
-        net: "astron",
+        net: "ethereum",
         netId: "1338",
         addr: "0x0D5da59B93e8AC9b1781CE5694fbcE626586F4c9",
         dnssec: false,

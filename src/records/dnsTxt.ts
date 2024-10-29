@@ -3,7 +3,7 @@ import { Static, Boolean, String, Literal, Record, Union, Partial } from "runtyp
 export const RecordTypesT = Literal("openatts");
 
 // export const BlockchainNetworkT = Literal("ethereum");
-export const BlockchainNetworkT = Union(Literal("ethereum"), Literal("hedera"), Literal("astron"));
+export const BlockchainNetworkT = Union(Literal("ethereum"), Literal("hedera"));
 
 export const EthereumAddressT = String.withConstraint((maybeAddress: string) => {
   return /0x[a-fA-F0-9]{40}/.test(maybeAddress) || `${maybeAddress} is not a valid ethereum address`;
@@ -11,10 +11,6 @@ export const EthereumAddressT = String.withConstraint((maybeAddress: string) => 
 
 export const HederaAccountIDT = String.withConstraint((maybeAddress: string) => {
   return /0x[a-fA-F0-9]{40}/.test(maybeAddress) || `${maybeAddress} is not a valid hedera address`;
-});
-
-export const AstronAccountIDT = String.withConstraint((maybeAddress: string) => {
-    return /0x[a-fA-F0-9]{40}/.test(maybeAddress) || `${maybeAddress} is not a valid astron address`;
 });
 
 export enum EthereumNetworks {
@@ -32,6 +28,7 @@ export enum EthereumNetworks {
   stability = "101010",
   hedera = "295",
   hederatestnet = "296",
+  astron = "1338",
 }
 
 export enum HederaNetworks {
@@ -39,13 +36,7 @@ export enum HederaNetworks {
   testnet = "296",
 }
 
-export enum AstronNetworks {
-  astron = "1338",
-}
-
 export const HederaNetworkIdT = Union(Literal(HederaNetworks.mainnet), Literal(HederaNetworks.testnet));
-
-export const AstronNetworkIdT = Union(Literal(AstronNetworks.astron));
 
 export const EthereumNetworkIdT = Union(
   Literal(EthereumNetworks.homestead),
@@ -61,7 +52,8 @@ export const EthereumNetworkIdT = Union(
   Literal(EthereumNetworks.stability),
   Literal(EthereumNetworks.local),
   Literal(EthereumNetworks.hedera),
-  Literal(EthereumNetworks.hederatestnet)
+  Literal(EthereumNetworks.hederatestnet),
+  Literal(EthereumNetworks.astron)
 );
 
 export const OpenAttestationDNSTextRecordT = Union(
@@ -76,12 +68,6 @@ export const OpenAttestationDNSTextRecordT = Union(
     net: Literal("hedera"),
     netId: HederaNetworkIdT,
     addr: HederaAccountIDT,
-  }).And(Partial({ dnssec: Boolean })),
-  Record({
-    type: RecordTypesT,
-    net: Literal("astron"),
-    netId: AstronNetworkIdT,
-    addr: AstronAccountIDT,
   }).And(Partial({ dnssec: Boolean }))
 );
 
