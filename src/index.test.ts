@@ -330,17 +330,17 @@ describe("getDocumentStoreRecords for Hedera", () => {
 });
 
 describe("getDocumentStoreRecords for Astron", () => {
-    const sampleDnsTextRecord = [
-      {
-        type: "openatts",
-        net: "ethereum",
-        netId: "1338",
-        addr: "0x0D5da59B93e8AC9b1781CE5694fbcE626586F4c9",
-        dnssec: false,
-      },
-    ];
-  
-    test("it should work with astronlayer2.bitfactory.cn", async () => {
+  const sampleDnsTextRecord = [
+    {
+      type: "openatts",
+      net: "ethereum",
+      netId: "1338",
+      addr: "0x0D5da59B93e8AC9b1781CE5694fbcE626586F4c9",
+      dnssec: false,
+    },
+  ];
+
+  test("it should work with astronlayer2.bitfactory.cn", async () => {
     const records = await getDocumentStoreRecords("astronlayer2.bitfactory.cn");
     expect(records).toStrictEqual(sampleDnsTextRecord);
   });
