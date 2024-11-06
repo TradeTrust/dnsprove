@@ -338,10 +338,24 @@ describe("getDocumentStoreRecords for Astron", () => {
       addr: "0x0D5da59B93e8AC9b1781CE5694fbcE626586F4c9",
       dnssec: false,
     },
+    {
+      type: "openatts",
+      net: "ethereum",
+      netId: "1338",
+      addr: "0x94FD21A026E29E0686583b8be71Cb28a8ca1A8d4",
+      dnssec: false,
+    },
   ];
 
   test("it should work with astronlayer2.bitfactory.cn", async () => {
-    const records = await getDocumentStoreRecords("astronlayer2.bitfactory.cn");
+    const records = (await getDocumentStoreRecords("astronlayer2.bitfactory.cn")).sort((a, b) => {
+      if (a.netId < b.netId) return -1;
+      if (a.netId > b.netId) return 1;
+      if (a.addr < b.addr) return -1;
+      if (a.addr > b.addr) return 1;
+      return 0;
+    });
+
     expect(records).toStrictEqual(sampleDnsTextRecord);
   });
 });
