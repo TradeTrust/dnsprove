@@ -281,6 +281,37 @@ describe("queryDns", () => {
   });
 });
 
+describe("getDocumentStoreRecords for AstronTestnet", () => {
+  const sampleDnsTextRecord = [
+    {
+      type: "openatts",
+      net: "ethereum",
+      netId: "21002",
+      addr: "0xbA1a6c1738a413271E036aB9f25fA5B46Ff2d586",
+      dnssec: false,
+    },
+    {
+      type: "openatts",
+      net: "ethereum",
+      netId: "21002",
+      addr: "0xdAEe89A37fEEBCBFAc94aBA63Fb163808dAc38Fb",
+      dnssec: false,
+    },
+  ];
+
+  test("it should work with dev-astronlayer2.bitfactory.cn", async () => {
+    const records = (await getDocumentStoreRecords("dev-astronlayer2.bitfactory.cn")).sort((a, b) => {
+      if (a.netId < b.netId) return -1;
+      if (a.netId > b.netId) return 1;
+      if (a.addr < b.addr) return -1;
+      if (a.addr > b.addr) return 1;
+      return 0;
+    });
+
+    expect(records).toStrictEqual(sampleDnsTextRecord);
+  });
+});
+
 describe("getDocumentStoreRecords for Astron", () => {
   const sampleDnsTextRecord = [
     {

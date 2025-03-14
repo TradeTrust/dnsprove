@@ -21,6 +21,7 @@ export enum EthereumNetworks {
   xdcapothem = "51",
   stabilityTestnet = "20180427",
   stability = "101010",
+  astronTestnet = "21002",
   astron = "1338",
 }
 
@@ -37,6 +38,7 @@ export const EthereumNetworkIdT = Union(
   Literal(EthereumNetworks.stabilityTestnet),
   Literal(EthereumNetworks.stability),
   Literal(EthereumNetworks.local),
+  Literal(EthereumNetworks.astronTestnet),
   Literal(EthereumNetworks.astron)
 );
 
