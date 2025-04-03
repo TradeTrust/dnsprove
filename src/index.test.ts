@@ -287,7 +287,7 @@ describe("getDocumentStoreRecords for AstronTestnet", () => {
       type: "openatts",
       net: "ethereum",
       netId: "21002",
-      addr: "0xbA1a6c1738a413271E036aB9f25fA5B46Ff2d586",
+      addr: "0xb1Bf514b3893357813F366282E887eE221D5C2dA",
       dnssec: false,
     },
     {
