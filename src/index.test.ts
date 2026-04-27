@@ -174,7 +174,7 @@ describe("parseDocumentStoreResults", () => {
     expect(parseDocumentStoreResults(sampleRecord, true)).toStrictEqual([]);
   });
 
-  test("it should accept Mantle mainnet (netId 5000)", () => {
+  test("it should accept any numeric netId (e.g. Mantle mainnet 5000)", () => {
     const addr = "0x2f60375e8144e16Adf1979936301D8341D58C36C";
     const sampleRecord = [
       {
@@ -196,14 +196,14 @@ describe("parseDocumentStoreResults", () => {
     ]);
   });
 
-  test("it should accept Mantle testnet (netId 5003)", () => {
+  test("it should accept an arbitrary previously-unknown numeric netId", () => {
     const addr = "0x2f60375e8144e16Adf1979936301D8341D58C36C";
     const sampleRecord = [
       {
         name: "example.example.com.",
         type: 16,
         TTL: 110,
-        data: `"openatts net=ethereum netId=5003 addr=${addr}"`,
+        data: `"openatts net=ethereum netId=99999 addr=${addr}"`,
         dnssec: false,
       },
     ];
@@ -211,11 +211,37 @@ describe("parseDocumentStoreResults", () => {
       {
         type: "openatts",
         net: "ethereum",
-        netId: "5003",
+        netId: "99999",
         addr,
         dnssec: false,
       },
     ]);
+  });
+
+  test("it should reject a non-numeric netId", () => {
+    const sampleRecord = [
+      {
+        name: "example.example.com.",
+        type: 16,
+        TTL: 110,
+        data: '"openatts net=ethereum netId=abc addr=0x2f60375e8144e16Adf1979936301D8341D58C36C"',
+        dnssec: false,
+      },
+    ];
+    expect(parseDocumentStoreResults(sampleRecord, false)).toStrictEqual([]);
+  });
+
+  test("it should reject an alphanumeric netId", () => {
+    const sampleRecord = [
+      {
+        name: "example.example.com.",
+        type: 16,
+        TTL: 110,
+        data: '"openatts net=ethereum netId=1abc addr=0x2f60375e8144e16Adf1979936301D8341D58C36C"',
+        dnssec: false,
+      },
+    ];
+    expect(parseDocumentStoreResults(sampleRecord, false)).toStrictEqual([]);
   });
 });
 
