@@ -2,6 +2,7 @@ import { OpenAttestationDNSTextRecord, OpenAttestationDNSTextRecordT } from "./r
 import { OpenAttestationDnsDidRecord, OpenAttestationDnsDidRecordT } from "./records/dnsDid";
 import { getLogger } from "./util/logger";
 import { CodedError, DnsproveStatusCode } from "./common/error";
+import { aliDnsResolver, cloudflareDnsResolver, googleDnsResolver } from "./util/dns-resolvers";
 
 const { trace } = getLogger("index");
 
@@ -23,22 +24,7 @@ interface GenericObject {
 
 export type CustomDnsResolver = (domain: string) => Promise<IDNSQueryResponse>;
 
-export const defaultDnsResolvers: CustomDnsResolver[] = [
-  async (domain) => {
-    const data = await fetch(`https://dns.google/resolve?name=${domain}&type=TXT`, {
-      method: "GET",
-    });
-
-    return data.json();
-  },
-  async (domain) => {
-    const data = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=TXT`, {
-      method: "GET",
-      headers: { accept: "application/dns-json", contentType: "application/json", connection: "keep-alive" },
-    });
-    return data.json();
-  },
-];
+export const defaultDnsResolvers: CustomDnsResolver[] = [googleDnsResolver, cloudflareDnsResolver, aliDnsResolver];
 
 /**
  * Returns true for strings that are openattestation records
@@ -115,8 +101,10 @@ export const parseOpenAttestationRecord = (record: string): GenericObject => {
   trace(`Parsing record: ${record}`);
   const keyValuePairs = record.trim().split(" "); // tokenize into key=value elements
   const recordObject = {} as GenericObject;
-  // @ts-ignore: we already checked for this token
-  recordObject.type = keyValuePairs.shift();
+  const typeToken = keyValuePairs.shift();
+  if (typeToken !== undefined) {
+    recordObject.type = typeToken;
+  }
   keyValuePairs.reduce<GenericObject>(addKeyValuePairToObject, recordObject);
   return recordObject;
 };
@@ -153,6 +141,7 @@ const parseOpenAttestationRecords = (recordSet: IDNSRecord[] = []): GenericObjec
 /**
  * Takes a DNS-TXT Record set and returns openattestation document store records if any
  * @param recordSet Refer to tests for examples
+ * @param dnssec Resolver AD (authenticated data) flag; applied as each record's `dnssec` field
  */
 export const parseDocumentStoreResults = (
   recordSet: IDNSRecord[] = [],
@@ -177,6 +166,7 @@ export const parseDnsDidResults = (recordSet: IDNSRecord[] = [], dnssec: boolean
 /**
  * Queries a given domain and parses the results to retrieve openattestation document store records if any
  * @param domain e.g: "example.openattestation.com"
+ * @param customDnsResolvers Optional resolver list; built-in HTTP DNS chain is used when omitted
  * @example
  * > getDocumentStoreRecords("example.openattestation.com")
  * > [ { type: 'openatts',
@@ -191,7 +181,7 @@ export const getDocumentStoreRecords = async (
 ): Promise<OpenAttestationDNSTextRecord[]> => {
   trace(`Received request to resolve ${domain}`);
 
-  const dnsResolvers = customDnsResolvers || defaultDnsResolvers;
+  const dnsResolvers = customDnsResolvers ?? defaultDnsResolvers;
 
   const results = await queryDns(domain, dnsResolvers);
   const answers = results.Answer || [];
@@ -207,7 +197,7 @@ export const getDnsDidRecords = async (
 ): Promise<OpenAttestationDnsDidRecord[]> => {
   trace(`Received request to resolve ${domain}`);
 
-  const dnsResolvers = customDnsResolvers || defaultDnsResolvers;
+  const dnsResolvers = customDnsResolvers ?? defaultDnsResolvers;
 
   const results = await queryDns(domain, dnsResolvers);
   const answers = results.Answer || [];
@@ -218,3 +208,4 @@ export const getDnsDidRecords = async (
 };
 
 export { OpenAttestationDNSTextRecord, OpenAttestationDnsDidRecord };
+export * from "./util/dns-resolvers";

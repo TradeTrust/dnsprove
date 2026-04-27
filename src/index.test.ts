@@ -1,6 +1,14 @@
 import { setupServer, SetupServerApi } from "msw/node";
 import { http, HttpResponse } from "msw";
-import { CustomDnsResolver, getDocumentStoreRecords, queryDns, parseDocumentStoreResults, getDnsDidRecords } from ".";
+import {
+  aliDnsResolver,
+  cloudflareDnsResolver,
+  getDocumentStoreRecords,
+  getDnsDidRecords,
+  googleDnsResolver,
+  parseDocumentStoreResults,
+  queryDns,
+} from ".";
 import { DnsproveStatusCode } from "./common/error";
 
 describe("getCertStoreRecords", () => {
@@ -8,11 +16,11 @@ describe("getCertStoreRecords", () => {
     type: "openatts",
     net: "ethereum",
     netId: "3",
-    dnssec: true,
+    dnssec: false,
     addr: "0x2f60375e8144e16Adf1979936301D8341D58C36C",
   };
   test("it should work", async () => {
-    const records = await getDocumentStoreRecords("donotuse.openattestation.com");
+    const records = await getDocumentStoreRecords("donotuse.trustvc.io");
     expect(records).toStrictEqual([sampleDnsTextRecordWithDnssec]);
   });
 
@@ -27,14 +35,14 @@ describe("getCertStoreRecords", () => {
 
 describe("getDnsDidRecords", () => {
   test("it should work", async () => {
-    const records = await getDnsDidRecords("donotuse.openattestation.com");
+    const records = await getDnsDidRecords("donotuse.trustvc.io");
     expect(records).toStrictEqual([
       {
         type: "openatts",
         algorithm: "dns-did",
         publicKey: "did:ethr:0xE712878f6E8d5d4F9e87E10DA604F9cB564C9a89#controller",
         version: "1.0",
-        dnssec: true,
+        dnssec: false,
       },
     ]);
   });
@@ -221,29 +229,29 @@ describe("queryDns", () => {
     RA: true,
     AD: true,
     CD: false,
-    Question: [{ name: "donotuse.openattestation.com.", type: 16 }],
+    Question: [{ name: "donotuse.trustvc.io.", type: 16 }],
     Answer: [
       {
-        name: "donotuse.openattestation.com.",
+        name: "donotuse.trustvc.io.",
         type: 16,
         TTL: 300,
         data: "openatts a=dns-did; p=did:ethr:0xE712878f6E8d5d4F9e87E10DA604F9cB564C9a89#controller; v=1.0;",
       },
       {
-        name: "donotuse.openattestation.com.",
+        name: "donotuse.trustvc.io.",
         type: 16,
         TTL: 300,
         data:
           "openatts DO NOT ADD ANY RECORDS BEYOND THIS AS THIS DOMAIN IS USED FOR DNSPROVE NPM LIBRARY INTEGRATION TESTS",
       },
       {
-        name: "donotuse.openattestation.com.",
+        name: "donotuse.trustvc.io.",
         type: 16,
         TTL: 300,
         data: "openatts fooooooobarrrrrrrrr this entry exists to ensure validation works",
       },
       {
-        name: "donotuse.openattestation.com.",
+        name: "donotuse.trustvc.io.",
         type: 16,
         TTL: 300,
         data: "openatts net=ethereum netId=3 addr=0x2f60375e8144e16Adf1979936301D8341D58C36C",
@@ -252,22 +260,7 @@ describe("queryDns", () => {
     Comment: "Response from 205.251.199.177.",
   };
 
-  const testDnsResolvers: CustomDnsResolver[] = [
-    async (domain) => {
-      const data = await fetch(`https://dns.google/resolve?name=${domain}&type=TXT`, {
-        method: "GET",
-      });
-
-      return data.json();
-    },
-    async (domain) => {
-      const data = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=TXT`, {
-        method: "GET",
-        headers: { accept: "application/dns-json", contentType: "application/json", connection: "keep-alive" },
-      });
-      return data.json();
-    },
-  ];
+  const testDnsResolvers = [googleDnsResolver, cloudflareDnsResolver, aliDnsResolver];
 
   afterEach(() => {
     server.close();
@@ -283,7 +276,7 @@ describe("queryDns", () => {
     server = setupServer(...handlers);
     server.listen();
 
-    const records = await queryDns("https://donotuse.openattestation.com", testDnsResolvers);
+    const records = await queryDns("https://donotuse.trustvc.io", testDnsResolvers);
     const sortedAnswer = records?.Answer.sort((a, b) => a.data.localeCompare(b.data));
     expect(sortedAnswer).toMatchObject(sampleResponse.Answer);
   });
@@ -300,7 +293,28 @@ describe("queryDns", () => {
     server = setupServer(...handlers);
     server.listen();
 
-    const records = await queryDns("https://donotuse.openattestation.com", testDnsResolvers);
+    const records = await queryDns("https://donotuse.trustvc.io", testDnsResolvers);
+
+    const sortedAnswer = records?.Answer.sort((a, b) => a.data.localeCompare(b.data));
+    expect(sortedAnswer).toMatchObject(sampleResponse.Answer);
+  });
+
+  test("Should fallback to third dns when first and second dns is down", async () => {
+    const handlers = [
+      http.get("https://dns.google/resolve", (_) => {
+        return new HttpResponse(null, { status: 500 });
+      }),
+      http.get("https://cloudflare-dns.com/dns-query", (_) => {
+        return new HttpResponse(null, { status: 500 });
+      }),
+      http.get("https://dns.alidns.com/resolve", (_) => {
+        return HttpResponse.json(sampleResponse);
+      }),
+    ];
+    server = setupServer(...handlers);
+    server.listen();
+
+    const records = await queryDns("https://donotuse.trustvc.io", testDnsResolvers);
 
     const sortedAnswer = records?.Answer.sort((a, b) => a.data.localeCompare(b.data));
     expect(sortedAnswer).toMatchObject(sampleResponse.Answer);
@@ -314,14 +328,16 @@ describe("queryDns", () => {
       http.get("https://cloudflare-dns.com/dns-query", (_) => {
         return new HttpResponse(null, { status: 500 });
       }),
+      http.get("https://dns.alidns.com/resolve", (_) => {
+        return new HttpResponse(null, { status: 500 });
+      }),
     ];
     server = setupServer(...handlers);
     server.listen();
-    try {
-      await queryDns("https://donotuse.openattestation.com", testDnsResolvers);
-    } catch (e: any) {
-      expect(e.code).toStrictEqual(DnsproveStatusCode.IDNS_QUERY_ERROR_GENERAL);
-    }
+
+    await expect(queryDns("https://donotuse.trustvc.io", testDnsResolvers)).rejects.toMatchObject({
+      code: DnsproveStatusCode.IDNS_QUERY_ERROR_GENERAL,
+    });
   });
 });
 
