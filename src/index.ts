@@ -2,7 +2,7 @@ import { OpenAttestationDNSTextRecord, OpenAttestationDNSTextRecordT } from "./r
 import { OpenAttestationDnsDidRecord, OpenAttestationDnsDidRecordT } from "./records/dnsDid";
 import { getLogger } from "./util/logger";
 import { CodedError, DnsproveStatusCode } from "./common/error";
-import { aliDnsResolver, cloudflareDnsResolver, googleDnsResolver } from "./util/dns-resolvers";
+import { aliDnsResolver, cloudflareDnsResolver, googleDnsResolver, proxyDnsResolver } from "./util/dns-resolvers";
 
 const { trace } = getLogger("index");
 
@@ -24,7 +24,12 @@ interface GenericObject {
 
 export type CustomDnsResolver = (domain: string) => Promise<IDNSQueryResponse>;
 
-export const defaultDnsResolvers: CustomDnsResolver[] = [googleDnsResolver, cloudflareDnsResolver, aliDnsResolver];
+export const defaultDnsResolvers: CustomDnsResolver[] = [
+  googleDnsResolver,
+  cloudflareDnsResolver,
+  proxyDnsResolver,
+  aliDnsResolver,
+];
 
 /**
  * Returns true for strings that are openattestation records

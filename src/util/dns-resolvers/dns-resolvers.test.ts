@@ -3,6 +3,7 @@ import { http, HttpResponse } from "msw";
 import { aliDnsResolver } from "./ali-dns-resolver";
 import { cloudflareDnsResolver } from "./cloudflare-dns-resolver";
 import { googleDnsResolver } from "./google-dns-resolver";
+import { proxyDnsResolver } from "./proxy-dns-resolver";
 
 const emptyDnsJson = {
   Status: 0,
@@ -116,5 +117,39 @@ describe("aliDnsResolver", () => {
 
   test("throws when domain is empty", async () => {
     await expect(aliDnsResolver("")).rejects.toThrow("Domain is required");
+  });
+});
+
+describe("proxyDnsResolver", () => {
+  let server: SetupServerApi | undefined;
+
+  afterEach(() => {
+    server?.close();
+  });
+
+  test("requests proxy DNS JSON with name, TXT type, and encoded query", async () => {
+    server = setupServer(
+      http.get("https://dns.opencerts.io/resolve", ({ request }) => {
+        const url = new URL(request.url);
+        expect(url.searchParams.get("name")).toBe("oc example.test");
+        expect(url.searchParams.get("type")).toBe("TXT");
+        return HttpResponse.json(emptyDnsJson);
+      })
+    );
+    server.listen();
+
+    const out = await proxyDnsResolver("oc example.test");
+    expect(out).toMatchObject({ Status: 0, Answer: [] });
+  });
+
+  test("throws when proxy DNS returns non-2xx", async () => {
+    server = setupServer(http.get("https://dns.opencerts.io/resolve", () => new HttpResponse(null, { status: 502 })));
+    server.listen();
+
+    await expect(proxyDnsResolver("oc.example.test")).rejects.toThrow(/HTTP 502/);
+  });
+
+  test("throws when domain is empty", async () => {
+    await expect(proxyDnsResolver("")).rejects.toThrow("Domain is required");
   });
 });
