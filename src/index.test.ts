@@ -336,6 +336,12 @@ describe("queryDns", () => {
       http.get("https://dns.alidns.com/resolve", (_) => {
         return HttpResponse.json(sampleResponse);
       }),
+      http.get("https://223.5.5.5/resolve", (_) => {
+        return HttpResponse.json(sampleResponse);
+      }),
+      http.get("https://223.6.6.6/resolve", (_) => {
+        return HttpResponse.json(sampleResponse);
+      }),
     ];
     server = setupServer(...handlers);
     server.listen();
@@ -355,6 +361,12 @@ describe("queryDns", () => {
         return new HttpResponse(null, { status: 500 });
       }),
       http.get("https://dns.alidns.com/resolve", (_) => {
+        return new HttpResponse(null, { status: 500 });
+      }),
+      http.get("https://223.5.5.5/resolve", (_) => {
+        return new HttpResponse(null, { status: 500 });
+      }),
+      http.get("https://223.6.6.6/resolve", (_) => {
         return new HttpResponse(null, { status: 500 });
       }),
     ];
