@@ -155,6 +155,27 @@ describe("aliDnsResolver", () => {
     expect(out.Answer.map((r) => r.data)).toEqual(["record-a"]);
   });
 
+  test("does not count consecutive fully failed waves towards convergence", async () => {
+    // Fail each host's first two requests — i.e. the first two whole waves — regardless
+    // of which ECS values the strategy uses. Without the failed-wave guard, two failed
+    // waves reach the convergence threshold and the resolver aborts before ever seeing
+    // an answer; with the guard it keeps going and succeeds on the third wave.
+    const failuresPerHost: { [host: string]: number } = {};
+    server = setupServer(
+      ...ALI_HOSTS.map((host) =>
+        http.get(`https://${host}/resolve`, () => {
+          failuresPerHost[host] = (failuresPerHost[host] || 0) + 1;
+          if (failuresPerHost[host] <= 2) return new HttpResponse(null, { status: 503 });
+          return HttpResponse.json({ ...emptyDnsJson, Answer: [answer("record-a")] });
+        })
+      )
+    );
+    server.listen();
+
+    const out = await aliDnsResolver("ali.example.test");
+    expect(out.Answer.map((r) => r.data)).toEqual(["record-a"]);
+  });
+
   test("does not count fully failed waves towards convergence", async () => {
     // The first wave carries no edns_client_subnet parameter and fails entirely;
     // later ECS waves succeed, so the resolver must still return their records.
